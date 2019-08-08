@@ -12,7 +12,7 @@ def current_task(**kwargs):
     # more code
 
 
-@task(name="My Task")
+@task()
 def new_format_task():
     updater = TaskUpdater(verbose=1)
 
