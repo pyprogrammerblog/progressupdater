@@ -22,7 +22,7 @@ class Migration(migrations.Migration):
                 ('log', models.TextField(default='')),
                 ('exception', models.TextField(default='')),
                 ('finished', models.BooleanField(default=False)),
-                ('status', models.IntegerField(choices=[(0, 'FAIL'), (1, 'COMPLETED'), (2, 'PENDING')], default=0)),
+                ('status', models.IntegerField(choices=[(0, 'FAIL'), (1, 'COMPLETED'), (2, 'PENDING')], default=2)),
             ],
         ),
     ]

@@ -21,7 +21,7 @@ class TaskUpdater(object):
         self.log_entry = {'log': ""}  # here is where we update changes
 
         # create log for a specific task
-        self.log_obj = LogUpdater.objects.create(
+        self.log_obj = LogUpdater.objects.get_or_create(
             task_name=self.task_name,
             task_uuid=self.task_uuid,
             status=2  # PENDING When task starts

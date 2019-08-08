@@ -21,7 +21,7 @@ class LogUpdater(models.Model):
     log = models.TextField(default="")
     exception = models.TextField(default="")
     finished = models.BooleanField(default=False)
-    status = models.IntegerField(default=0, choices=status_choices)
+    status = models.IntegerField(default=2, choices=status_choices)
 
     def __str__(self):
         return f"Log for: {self.task_name} - {self.task_uuid}"
