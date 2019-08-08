@@ -1,5 +1,5 @@
-Progress Updater for Async Task in Celery
-==========================================
+Progress Updater for Tasks. The Magic of the Context Managers in Python
+=======================================================================
 
 In this small project I tried to set de basis for a Progess Updater that tracks any task.
 
@@ -8,7 +8,8 @@ What is the Progress Updater?
 - It is an object insert in each task (sync or async) that keeps track of the current task situation or progress.
 - It has also an api endpoint to facilitate current status of each task. This can be used by front-end apps in order to keep clients updated.
 
-## Implementation
+Implementation
+-----------------------------
 It is very easy to use, and it needs few implementation.
 It provides a context manager that makes the dirty part for you.::
 
@@ -43,16 +44,16 @@ With this format we can also follow tasks that call other tasks. The object will
 
 	    updater = TaskUpdater(task_uuid=uuid, task_name=name, verbose=verbose)
 
-	    with updater(task_name=name + 'First part'):
+	    with updater(task_name=name + ' - First part'):
 		# here some code
 		time.sleep(1)
 		updater.notify('Some notification related to the task')
 
-	    with updater(task_name=name + 'Second part'):
+	    with updater(task_name=name + ' - Second part'):
 		##  here we call another method and we make sure we pass the updater
 		my_task_2(updater=updater)
 
-	    updater.raise_latest_exception()  # in case of...
+	    updater.raise_latest_exception()  # in case of...or insert_final_update
 
 
 	def my_task_2(updater=None):
@@ -75,13 +76,13 @@ With this format we can also follow tasks that call other tasks. The object will
 
 The output of the log.::
 
-		 - TESTFirst part
-		Some notification related to the task
+		 - TEST - First part
+		    Some notification related to the task
 			Successfully completed
 			Time spent: 0h0m
-		 - TESTSecond part
+		 - TEST - Second part
 		 - My subtask 1 in my task 2
-		Some notification related to the task
+            Some notification related to the task
 			Successfully completed
 			Time spent: 0h0m
 		 - My subtask 2 in my task 2
@@ -90,7 +91,7 @@ The output of the log.::
 			See error message:
 	<class 'ZeroDivisionError'>: division by zero
 		 - My subtask 3 in my task 2
-		Some notification related to the task
+		    Some notification related to the task
 			Successfully completed
 			Time spent: 0h0m
 
@@ -109,3 +110,11 @@ The api looks like.::
 		"finished": true,
 		"status": 0
 	    }
+
+So that is all, basically two things:
+1 - Make sure you encapsulate with the `updater` context manager the code you want to track.
+2 - Remember to `raise_latest_exception` in case those are need by downstream process.
+3 - If you do not trigger the previous step you must call `insert_final_update`.
+
+The admin implement a nice package to export logs in any format, those could be sent monthly to clients with failed task.
+
