@@ -89,32 +89,37 @@ The output of the log.::
 			Failed
 			Time spent: 0h0m
 			See error message:
-	<class 'ZeroDivisionError'>: division by zero
+	        <class 'ZeroDivisionError'>: division by zero
 		 - My subtask 3 in my task 2
 		    Some notification related to the task
 			Successfully completed
 			Time spent: 0h0m
 
-		Task Finished - 3 out of 4 jobs finished
+		    Task Finished - 3 out of 4 jobs finished
 
 
 The api looks like.::
 
 	    {
-		"task_name": "TEST",
-		"task_uuid": "54bf5712-b9ec-11e9-afdd-8c16454a0938",
-		"start": null,
-		"end": "2019-08-08T14:54:12.788631Z",
-		"log": "\t - TESTFirst part\n\tSome notification related to the task\n\t\tSuccessfully completed\n\t\tTime spent: 0h0m\n\t - TESTSecond part\n\t - My subtask 1 in my task 2\n\tSome notification related to the task\n\t\tSuccessfully completed\n\t\tTime spent: 0h0m\n\t - My subtask 2 in my task 2\n\t\tFailed\n\t\tTime spent: 0h0m\n\t\tSee error message:\n<class 'ZeroDivisionError'>: division by zero\n\t - My subtask 3 in my task 2\n\tSome notification related to the task\n\t\tSuccessfully completed\n\t\tTime spent: 0h0m\n\tTask Finished - 3 out of 4 jobs finished\n",
-		"exception": "division by zero",
-		"finished": true,
-		"status": 0
+            "task_name": "TEST",
+            "task_uuid": "54bf5712-b9ec-11e9-afdd-8c16454a0938",
+            "start": null,
+            "end": "2019-08-08T14:54:12.788631Z",
+            "log": "\t - TESTFirst part\n\tSome notification related to the task\n\t\tSuccessfully completed\n\t\tTime spent: 0h0m\n\t - TESTSecond part\n\t - My subtask 1 in my task 2\n\tSome notification related to the task\n\t\tSuccessfully completed\n\t\tTime spent: 0h0m\n\t - My subtask 2 in my task 2\n\t\tFailed\n\t\tTime spent: 0h0m\n\t\tSee error message:\n<class 'ZeroDivisionError'>: division by zero\n\t - My subtask 3 in my task 2\n\tSome notification related to the task\n\t\tSuccessfully completed\n\t\tTime spent: 0h0m\n\tTask Finished - 3 out of 4 jobs finished\n",
+            "exception": "division by zero",
+            "finished": true,
+            "status": 0
 	    }
 
 So that is all, basically two things:
-1 - Make sure you encapsulate with the `updater` context manager the code you want to track.
-2 - Remember to `raise_latest_exception` in case those are need by downstream process.
-3 - If you do not trigger the previous step you must call `insert_final_update`.
+
+1. Make sure you encapsulate with the `updater` context manager the code you want to track.
+2. Remember to `raise_latest_exception` in case those are need by downstream process.
+3. If you do not trigger the previous step, you must call `insert_final_update`.
 
 The admin implement a nice package to export logs in any format, those could be sent monthly to clients with failed task.
 
+
+The Celery Implementation
+-------------------------
+An extra decorator on top of the task() decorator of celery is in charged of creating the log object.
