@@ -122,4 +122,4 @@ The admin implement a nice package to export logs in any format, those could be 
 
 The Celery Implementation
 -------------------------
-The updater in his constructor access to the uuid of the task and generates a log with this task_uuid
+The updater in his constructor access to the uuid of the task and the name. Then it generates a log with this task_uuid and task_name
