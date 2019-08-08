@@ -1,6 +1,7 @@
 import datetime
 from django.utils.timezone import get_current_timezone
 from .models import LogUpdater
+import celery
 
 
 class TaskUpdater(object):
@@ -11,8 +12,8 @@ class TaskUpdater(object):
     def __init__(self, verbose=True, suppress_exception=True,
                  task_uuid=None, task_name=None):
         self.verbose = verbose
-        self.task_name = task_name
-        self.task_uuid = task_uuid
+        self.task_name = task_name or celery.current_task.name or "Task"
+        self.task_uuid = task_uuid or celery.current_task.request.id
         self.history = []
         self.exc_history = []
         self._finished = False
@@ -21,7 +22,7 @@ class TaskUpdater(object):
         self.log_entry = {'log': ""}  # here is where we update changes
 
         # create log for a specific task
-        self.log_obj = LogUpdater.objects.get_or_create(
+        self.log_obj = LogUpdater.objects.create(
             task_name=self.task_name,
             task_uuid=self.task_uuid,
             status=2  # PENDING When task starts

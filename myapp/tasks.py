@@ -1,21 +1,22 @@
 import time
 from updater.updater import TaskUpdater
 import uuid
-from celery import shared_task
+from celery import task, Task
 
 
-@shared_task()
+
+@task()
 def current_task(**kwargs):
     # some long code
     time.sleep(1)
     # more code
 
 
-@shared_task()
-def new_format_task(task_uuid, task_name):
-    updater = TaskUpdater(task_uuid=task_uuid, task_name=task_name, verbose=1)
+@task(name="My Task")
+def new_format_task():
+    updater = TaskUpdater(verbose=1)
 
-    with updater(task_name=task_name):
+    with updater(task_name=updater.task_name):
         # here the code
         time.sleep(1)
         # notify something if you want
@@ -27,7 +28,7 @@ def new_format_task(task_uuid, task_name):
     updater.raise_latest_exception()  # in case of it is needed...
 
 
-@shared_task()
+@task()
 def new_format_task_1(uuid=uuid.uuid4(), name='TEST', verbose=1):
 
     updater = TaskUpdater(task_uuid=uuid, task_name=name, verbose=verbose)
@@ -44,7 +45,7 @@ def new_format_task_1(uuid=uuid.uuid4(), name='TEST', verbose=1):
     updater.raise_latest_exception()  # in case of...
 
 
-@shared_task()
+@task()
 def my_task_2(updater=None):
 
     with updater(task_name='My subtask 1 in my task 2'):
