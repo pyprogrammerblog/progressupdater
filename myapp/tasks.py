@@ -1,6 +1,6 @@
 import time
 from updater.updater import ProgressUpdater, progress_updater
-from celery import task, shared_task
+from celery import task
 
 
 

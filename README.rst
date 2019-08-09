@@ -40,7 +40,7 @@ It will instantiate the ProgressUpdater and it will do the whole thing for you::
 
     @task()
     @progress_updater
-    def current_task(**kwargs):
+    def my_task(**kwargs):
         # some long code
         time.sleep(1)
         # more code
@@ -48,7 +48,7 @@ It will instantiate the ProgressUpdater and it will do the whole thing for you::
 
 With this format we can also follow tasks that call other tasks. The object will follow the flow of the code.::
 
-	def new_format_task_1(task_name='TEST', verbose=1):
+	def my_task(task_name='TEST', verbose=1):
 
 	    updater = ProgressUpdater(task_name=task_name, verbose=verbose)
 
