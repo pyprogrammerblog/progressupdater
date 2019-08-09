@@ -53,14 +53,14 @@ With this format we can also follow tasks that call other tasks. The object will
 	    updater = ProgressUpdater(task_name=task_name, verbose=verbose)
 
 	    with updater(task_name=task_name + ' - First part'):
-            # here some code
-            time.sleep(1)
-            updater.notify('Some notification related to the task')
+                # here some code
+                time.sleep(1)
+                updater.notify('Some notification related to the task')
 
-        with updater(task_name=task_name + ' - Second part'):
-            my_task_2(updater=updater)
+            with updater(task_name=task_name + ' - Second part'):
+                my_task_2(updater=updater)
 
-        updater.insert_final_update()  # ...or raise_latest_exception
+            updater.insert_final_update()  # ...or raise_latest_exception
 
 
 	def my_task_2(updater=None):
