@@ -136,9 +136,16 @@ Run in a terminal.::
 
 And then open a django shell session and run a task.::
 
-    >>> from myapp.tasks import new_format_task
-    >>> new_format_task.delay()
-         - myapp.tasks.new_format_task
+    @task()
+    @progress_updater
+    def my_task(**kwargs):
+	# some long code
+	time.sleep(1)
+	# more code
+
+    >>> from myapp.tasks import my_task
+    >>> my_task.delay()
+         - myapp.tasks.my_task
             Successfully completed
             Time spent: 0h0m
         Task Finished - 1 out of 1 jobs finished
