@@ -1,7 +1,7 @@
 Progress Updater for Tasks. The Magic of the Context Managers in Python
 =======================================================================
 
-In this small project I tried to set de basis for a Progess Updater that tracks any task.
+In this small project I tried to set de basis for a ProgessUpdater that tracks any task.
 
 What is the Progress Updater?
 -----------------------------
@@ -12,34 +12,32 @@ What is the Progress Updater?
 Implementation
 -----------------------------
 It is very easy to use, and it needs few implementation.
-It provides a context manager that makes the dirty part for you.::
+It provides a context manager that makes the dirty part for you. The old format::
 
-    # old format
     @task()
-    def current_task(**kwargs):
+    def my_task(**kwargs):
         # some long code
         time.sleep(1)
         # more code
 
-    # new format
+The new format::
+
     @task()
-    def new_format_task(updater=None):
+    def my_task(updater=None):
 
-        # create instance
-        updater = updater or TaskUpdater(verbose=1)
+        updater = updater or ProgressUpdater(verbose=1)
 
-        # encapsulate the task with the context manager
-        with updater():  # if no task_name is passed, the name of the celery task is taken
-        # here the code
-        time.sleep(1)
-        # notify something if you want
-        updater.notify('Some notification related to the task')
-        # more code
+        with updater():
+            # some long code
+            time.sleep(1)
+            updater.notify('Some notification related to the task')
+            # more code
 
-        # finally reraise latest exception if needed...
-        updater.raise_latest_exception()
+        updater.raise_latest_exception()  # raise exception if needed...
 
-    # with decorator is really easy, just decorates the whole method and good to go!
+The easiest and fastest way is to just decorate the method.
+It will instantiate the ProgressUpdater and it will do the whole thing for you::
+
     @task()
     @progress_updater
     def current_task(**kwargs):
@@ -50,20 +48,19 @@ It provides a context manager that makes the dirty part for you.::
 
 With this format we can also follow tasks that call other tasks. The object will follow the flow of the code.::
 
-	def new_format_task_1(uuid=uuid.uuid4(), name='TEST', verbose=1):
+	def new_format_task_1(task_name='TEST', verbose=1):
 
-	    updater = TaskUpdater(task_uuid=uuid, task_name=name, verbose=verbose)
+	    updater = ProgressUpdater(task_name=task_name, verbose=verbose)
 
-	    with updater(task_name=name + ' - First part'):
-		# here some code
-		time.sleep(1)
-		updater.notify('Some notification related to the task')
+	    with updater(task_name=task_name + ' - First part'):
+            # here some code
+            time.sleep(1)
+            updater.notify('Some notification related to the task')
 
-	    with updater(task_name=name + ' - Second part'):
-		##  here we call another method and we make sure we pass the updater
-		my_task_2(updater=updater)
+        with updater(task_name=task_name + ' - Second part'):
+            my_task_2(updater=updater)
 
-	    updater.raise_latest_exception()  # in case of...or insert_final_update
+        updater.insert_final_update()  # ...or raise_latest_exception
 
 
 	def my_task_2(updater=None):
@@ -105,7 +102,7 @@ The output of the log.::
 			Successfully completed
 			Time spent: 0h0m
 
-		    Task Finished - 3 out of 4 jobs finished
+		 Task Finished - 3 out of 4 jobs finished
 
 
 The api looks like.::
@@ -113,7 +110,7 @@ The api looks like.::
 	    {
             "task_name": "TEST",
             "task_uuid": "54bf5712-b9ec-11e9-afdd-8c16454a0938",
-            "start": null,
+            "start": "2019-08-08T14:54:10.788631Z",
             "end": "2019-08-08T14:54:12.788631Z",
             "log": "\t - TESTFirst part\n\tSome notification related to the task\n\t\tSuccessfully completed\n\t\tTime spent: 0h0m\n\t - TESTSecond part\n\t - My subtask 1 in my task 2\n\tSome notification related to the task\n\t\tSuccessfully completed\n\t\tTime spent: 0h0m\n\t - My subtask 2 in my task 2\n\t\tFailed\n\t\tTime spent: 0h0m\n\t\tSee error message:\n<class 'ZeroDivisionError'>: division by zero\n\t - My subtask 3 in my task 2\n\tSome notification related to the task\n\t\tSuccessfully completed\n\t\tTime spent: 0h0m\n\tTask Finished - 3 out of 4 jobs finished\n",
             "exception": "division by zero",
@@ -124,8 +121,8 @@ The api looks like.::
 So that is all, basically two things:
 
 1. Make sure you encapsulate with the `updater` context manager the code you want to track.
+2. Remember to call `insert_final_update` to write the balance of jobs finished and final statusof the task.
 2. Remember to `raise_latest_exception` in case those are need by downstream process.
-3. If you do not trigger the previous step, you must call `insert_final_update`.
 
 The admin implement a nice package to export logs in any format, those could be sent monthly to clients with failed task.
 
@@ -140,7 +137,7 @@ Run in a terminal.::
 And then open a django shell session and run a task.::
 
     >>> from myapp.tasks import new_format_task
-    >>> new_format_task()
+    >>> new_format_task.delay()
          - myapp.tasks.new_format_task
             Successfully completed
             Time spent: 0h0m
