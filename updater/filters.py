@@ -1,6 +1,7 @@
 import django_filters
 from updater.models import LogUpdater
 
+
 class ProductFilter(django_filters.FilterSet):
     class Meta:
         model = LogUpdater

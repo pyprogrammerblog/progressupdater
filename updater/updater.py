@@ -1,19 +1,20 @@
 import datetime
+import celery
+import functools
+
 from django.utils.timezone import get_current_timezone
 from .models import LogUpdater
-import celery
 
 
-class TaskUpdater(object):
+class ProgressUpdater(object):
     FAIL = 0
     COMPLETED = 1
     PENDING = 2
 
-    def __init__(self, verbose=True, suppress_exception=True,
-                 task_uuid=None, task_name=None):
+    def __init__(self, task_name=None, suppress_exception=True, verbose=1):
         self.verbose = verbose
-        self.task_name = task_name or celery.current_task.name or "Task"
-        self.task_uuid = task_uuid or celery.current_task.request.id
+        self.task_name = task_name or celery.current_task.name
+        self.task_uuid = celery.current_task.request.id
         self.history = []
         self.exc_history = []
         self._finished = False
@@ -38,11 +39,11 @@ class TaskUpdater(object):
     def __exit__(self, exc_type, exc_val, exc_tb):
         if exc_type:
             self.exc_history.append((exc_type, exc_val, exc_tb))
-            self.finish_task(TaskUpdater.FAIL, error=exc_val)
+            self.finish_task(ProgressUpdater.FAIL, error=exc_val)
             self.finished_tasks.append(False)
             return self.suppress_exception
         elif not self._finished:
-            self.finish_task(TaskUpdater.COMPLETED)
+            self.finish_task(ProgressUpdater.COMPLETED)
             self.finished_tasks.append(True)
             return True
 
@@ -50,7 +51,6 @@ class TaskUpdater(object):
         return len(self.exc_history) > 0
 
     def raise_latest_exception(self):
-        self.insert_final_update()
         if self.exc_history:
             raise self.exc_history[-1][0](
                 self.exc_history[-1][1]).with_traceback(
@@ -68,7 +68,7 @@ class TaskUpdater(object):
         # for each task or subtask
         self.end_t = datetime.datetime.now(tz=get_current_timezone())
         self._finished = True
-        if reason != TaskUpdater.FAIL:
+        if reason != ProgressUpdater.FAIL:
             self.notify('\tSuccessfully completed')
         else:
             self.notify('\tFailed')
@@ -76,7 +76,7 @@ class TaskUpdater(object):
         delta = self.end_t - self.start_t
         self.notify('\tTime spent: {0}h{1}m'.format(
             delta.seconds // 3600, (delta.seconds // 60) % 60))
-        if reason == TaskUpdater.FAIL:
+        if reason == ProgressUpdater.FAIL:
             self.notify('\tSee error message:\n{}: {}'.format(
                 str(type(error)), error))
         elif import_result is not None:
@@ -118,10 +118,23 @@ class TaskUpdater(object):
         if exc_history:
             self.log_entry.update({"exception_history": exc_history})
 
-        # updating
+        # updating...
         try:
             LogUpdater.objects.filter(
                 pk=self.log_obj.pk).update(**self.log_entry)
         except Exception as e:
             if self.verbose:
                 print(str(e))
+
+
+def progress_updater(task_name=None):
+    def decorator(func):
+        @functools.wraps(func)
+        def inner(*args, **kwargs):
+            updater = ProgressUpdater(verbose=1)
+            with updater(task_name=task_name):
+                func(*args, **kwargs)
+            updater.insert_final_update()
+            return updater.raise_latest_exception()
+        return inner
+    return decorator

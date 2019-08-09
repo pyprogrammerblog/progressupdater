@@ -5,37 +5,47 @@ In this small project I tried to set de basis for a Progess Updater that tracks 
 
 What is the Progress Updater?
 -----------------------------
-- It is an object insert in each task (sync or async) that keeps track of the current task situation or progress.
-- It has also an api endpoint to facilitate current status of each task. This can be used by front-end apps in order to keep clients updated.
+- It is an object inserted in each task (sync or async) that keeps track of the current task situation or progress.
+- It has also an api endpoint to facilitate current status retrieving of each task.
+  This can be used by front-end apps in order to keep clients updated.
 
 Implementation
 -----------------------------
 It is very easy to use, and it needs few implementation.
 It provides a context manager that makes the dirty part for you.::
 
-	# old format
-	def current_task(**kwargs):
-	    # some long code
-	    time.sleep(1)
-	    # more code
+    # old format
+    @task()
+    def current_task(**kwargs):
+        # some long code
+        time.sleep(1)
+        # more code
 
-	# new format
-	def new_format_task(task_uuid, task_name, updater=None):
+    # new format
+    @task()
+    def new_format_task(updater=None):
 
-	    # create instance
-	    updater = updater or TaskUpdater(task_uuid=task_uuid, task_name=task_name, verbose=1)
+        # create instance
+        updater = updater or TaskUpdater(verbose=1)
 
-	    # encapsulate the task with the context manager
-	    with updater(task_name=task_name):
-		# here the code
-		time.sleep(1)
-		# notify something if you want
-		updater.notify('Some notification related to the task')
-		# more code
-		time.sleep(1)
+        # encapsulate the task with the context manager
+        with updater():  # if no task_name is passed, the name of the celery task is taken
+        # here the code
+        time.sleep(1)
+        # notify something if you want
+        updater.notify('Some notification related to the task')
+        # more code
 
-	    # finally reraise latest exception if needed or not...
-	    updater.raise_latest_exception()  # in case of it is needed...
+        # finally reraise latest exception if needed...
+        updater.raise_latest_exception()
+
+    # with decorator is really easy, just decorates the whole method and good to go!
+    @task()
+    @progress_updater
+    def current_task(**kwargs):
+        # some long code
+        time.sleep(1)
+        # more code
 
 
 With this format we can also follow tasks that call other tasks. The object will follow the flow of the code.::
@@ -122,4 +132,18 @@ The admin implement a nice package to export logs in any format, those could be 
 
 The Celery Implementation
 -------------------------
-The updater in his constructor access to the uuid of the task and the name. Then it generates a log with this task_uuid and task_name
+The updater in his constructor access to the uuid of the task and the name. Then it generates a log with this task_uuid and task_name.
+Run in a terminal.::
+
+    celery --app=progressupdater.celery:app worker --loglevel=INFO
+
+And then open a django shell session and run a task.::
+
+    >>> from myapp.tasks import new_format_task
+    >>> new_format_task()
+         - myapp.tasks.new_format_task
+            Successfully completed
+            Time spent: 0h0m
+        Task Finished - 1 out of 1 jobs finished
+
+
