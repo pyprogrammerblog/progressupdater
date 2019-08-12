@@ -40,9 +40,10 @@ It will instantiate the ProgressUpdater and it will do the whole thing for you::
 
     @task()
     @progress_updater
-    def my_task(**kwargs):
+    def my_task(updater, **kwargs):
         # some long code
         time.sleep(1)
+        updater.notify('Some notification related to the task')
         # more code
 
 
@@ -53,32 +54,32 @@ With this format we can also follow tasks that call other tasks. The object will
 	    updater = ProgressUpdater(task_name=task_name, verbose=verbose)
 
 	    with updater(task_name=task_name + ' - First part'):
-                # here some code
-                time.sleep(1)
-                updater.notify('Some notification related to the task')
+            # here some code
+            time.sleep(1)
+            updater.notify('Some notification related to the task')
 
-            with updater(task_name=task_name + ' - Second part'):
-                my_task_2(updater=updater)
+        with updater(task_name=task_name + ' - Second part'):
+            my_task_2(updater=updater)
 
-            updater.insert_final_update()  # ...or raise_latest_exception
+        updater.insert_final_update()  # ...or raise_latest_exception
 
 
 	def my_task_2(updater=None):
 
 	    with updater(task_name='My subtask 1 in my task 2'):
-		# here some code
-		time.sleep(1)
-		updater.notify('Some notification related to the task')
+            # here some code
+            time.sleep(1)
+            updater.notify('Some notification related to the task')
 
 	    with updater(task_name='My subtask 2 in my task 2'):
-		time.sleep(10)
-		1/0  # raise exception
-		updater.notify('Some notification related to the task')
+            time.sleep(10)
+            1/0  # raise exception
+            updater.notify('Some notification related to the task')
 
 	    with updater(task_name='My subtask 3 in my task 2'):
-		# here some code
-		time.sleep(1)
-		updater.notify('Some notification related to the task')
+            # here some code
+            time.sleep(1)
+            updater.notify('Some notification related to the task')
 
 
 The output of the log.::
@@ -89,7 +90,7 @@ The output of the log.::
 			Time spent: 0h0m
 		 - TEST - Second part
 		 - My subtask 1 in my task 2
-            Some notification related to the task
+		    Some notification related to the task
 			Successfully completed
 			Time spent: 0h0m
 		 - My subtask 2 in my task 2
@@ -122,7 +123,7 @@ So that is all, basically two things:
 
 1. Make sure you encapsulate with the `updater` context manager the code you want to track.
 2. Remember to call `insert_final_update` to write the balance of jobs finished and final statusof the task.
-2. Remember to `raise_latest_exception` in case those are need by downstream process.
+3. Remember to `raise_latest_exception` in case those are need by downstream process.
 
 The admin implement a nice package to export logs in any format, those could be sent monthly to clients with failed task.
 
@@ -138,16 +139,19 @@ And then open a django shell session and run a task.::
 
     @task()
     @progress_updater
-    def my_task(**kwargs):
-	# some long code
-	time.sleep(1)
-	# more code
+    def my_task(updater, **kwargs):
+        # some long code
+        updater.notify('About to start a long task.')
+        time.sleep(1)
+        updater.notify('Long task finished.')
+        # more code
 
     >>> from myapp.tasks import my_task
     >>> my_task.delay()
          - myapp.tasks.my_task
+            About to start a long task.
+            Long task finished.
             Successfully completed
             Time spent: 0h0m
         Task Finished - 1 out of 1 jobs finished
-
 

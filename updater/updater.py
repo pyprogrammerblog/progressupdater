@@ -132,8 +132,8 @@ def progress_updater(task_name=None):
         @functools.wraps(func)
         def inner(*args, **kwargs):
             updater = ProgressUpdater(verbose=1)
-            with updater(task_name=task_name):
-                func(*args, **kwargs)
+            with updater(task_name=task_name) as updater:
+                func(updater, *args, **kwargs)
             updater.insert_final_update()
             return updater.raise_latest_exception()
         return inner
