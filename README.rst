@@ -67,19 +67,19 @@ With this format we can also follow tasks that call other tasks. The object will
 	def my_task_2(updater=None):
 
 	    with updater(task_name='My subtask 1 in my task 2'):
-            # here some code
-            time.sleep(1)
-            updater.notify('Some notification related to the task')
+		# here some code
+		time.sleep(1)
+		updater.notify('Some notification related to the task')
 
 	    with updater(task_name='My subtask 2 in my task 2'):
-            time.sleep(10)
-            1/0  # raise exception
-            updater.notify('Some notification related to the task')
+		time.sleep(10)
+		1/0  # raise exception
+		updater.notify('Some notification related to the task')
 
 	    with updater(task_name='My subtask 3 in my task 2'):
-            # here some code
-            time.sleep(1)
-            updater.notify('Some notification related to the task')
+		# here some code
+		time.sleep(1)
+		updater.notify('Some notification related to the task')
 
 
 The output of the log.::
@@ -97,7 +97,7 @@ The output of the log.::
 			Failed
 			Time spent: 0h0m
 			See error message:
-	        <class 'ZeroDivisionError'>: division by zero
+	            <class 'ZeroDivisionError'>: division by zero
 		 - My subtask 3 in my task 2
 		    Some notification related to the task
 			Successfully completed
@@ -108,7 +108,7 @@ The output of the log.::
 
 The api looks like.::
 
-	    {
+	{
             "task_name": "TEST",
             "task_uuid": "54bf5712-b9ec-11e9-afdd-8c16454a0938",
             "start": "2019-08-08T14:54:10.788631Z",
@@ -117,7 +117,7 @@ The api looks like.::
             "exception": "division by zero",
             "finished": true,
             "status": 0
-	    }
+	}
 
 So that is all, basically two things:
 
